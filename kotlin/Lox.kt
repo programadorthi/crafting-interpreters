@@ -31,6 +31,14 @@ internal object Lox {
     report(line = line, where = "", message = message)
   }
 
+  fun error(token: Token, message: String) {
+    val location = when (token.type) {
+      TokenType.EOF -> " at end"
+      else -> " at '${token.lexeme}'"
+    }
+    report(line = token.line, where = location, message = message)
+  }
+
   private fun report(line: Int, where: String, message: String) {
     System.err.println("[line $line] Error $where: $message")
     hadError = true
@@ -39,9 +47,11 @@ internal object Lox {
   private fun runScript(source: String) {
     val scanner = Scanner(source)
     val tokens = scanner.scanTokens()
+    val parser = Parser(tokens)
+    val expression = parser.parse()
 
-    for (token in tokens) {
-      println(token)
-    }
+    if (hadError || expression == null) return
+
+    println(AstPrinter().print(expression))
   }
 }
